@@ -8,13 +8,11 @@ I've published them for a few co-workers and myself.
 1. Requests - http://docs.python-requests.org/en/latest/
 1. A working Toggl account with a working API token
 
-## Setup
-
-## Toggl configuration
+## Setup:
 
 1. Create `~/.togglrc` file: (use your own token)<pre>[toggl]<br/>token=e0926223d8c73bbe7ab136d042530d9a</pre>
 
-## The Utilities
+## The Utilities:
 
 Use --help with any utility to see documentation
 
