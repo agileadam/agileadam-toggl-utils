@@ -55,13 +55,59 @@ def report_query(url, params):
     return response.json()
 
 
+def get_workspaces():
+    return toggl_query('/workspaces', None, 'GET')
+
+
+def get_timeslips_query(**kwargs):
+    params = {
+        'grouping': 'users',
+        'subgrouping': 'projects',
+        'order_field': 'date',
+    }
+
+    for key in kwargs:
+        if not params.get(key):
+            params[key] = kwargs.get(key)
+
+    response = report_query("/details", params)
+
+    return response
+
+
+def get_timeslips(**kwargs):
+    timeslips = []
+    response = get_timeslips_query(**kwargs)
+    data = response['data']
+    per_page = response['per_page']
+    total_count = response['total_count']
+
+    if data:
+        for row in data:
+            timeslips.append(row)
+
+    if total_count > per_page:
+        # There are more records than can be returned in one go-round.
+        total_pages = total_count / per_page
+        if total_count % per_page:
+            total_pages += 1
+
+        for current_page in range(total_pages):
+            page = current_page + 1
+            if page > 1:
+                response = get_timeslips_query(page=page, **kwargs)
+                data = response['data']
+                if data:
+                    for row in data:
+                        timeslips.append(row)
+
+    return timeslips
+
+
 def hhmmss(tdelta):
     minutes, seconds = divmod(tdelta.seconds + tdelta.days * 86400, 60)
     hours, minutes = divmod(minutes, 60)
     return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
-
-def get_workspaces():
-    return toggl_query('/workspaces', None, 'GET')
 
 workspaces = get_workspaces()
 workspace_found = False
@@ -75,18 +121,25 @@ for workspace in workspaces:
 if not workspace_found:
     raise UserWarning('Could not find a Toggl workspace with this ID')
 
-# Convert to a string
-args.wid = str(args.wid)
-
-
 today = date.today()
 monday = today - timedelta(days=today.weekday())
-result = report_query('/summary', {"workspace_id": args.wid, "since": monday})
+timeslips = get_timeslips(workspace_id=str(args.wid), since=monday)
+
+entries = {}
+all_dur = 0
+for entry in timeslips:
+    project = entry["project"]
+    dur = entry["dur"]
+
+    if project not in entries:
+        entries[project] = 0
+    entries[project] += dur
+    all_dur += dur
 
 # Print summary
 if args.goal:
-    if result["total_grand"]:
-        total_time_hhmmss = hhmmss(timedelta(milliseconds=result["total_grand"]))
+    if all_dur:
+        total_time_hhmmss = hhmmss(timedelta(milliseconds=all_dur))
         total_time = timedelta(hours=int(total_time_hhmmss[0:2]), minutes=int(total_time_hhmmss[3:5]), seconds=int(total_time_hhmmss[6:8]))
     else:
         total_time_hhmmss = "00:00:00"
@@ -106,5 +159,5 @@ if args.goal:
     print ""
 
 # Print projects
-for project in result["data"]:
-    print project["title"]["project"], hhmmss(timedelta(milliseconds=project["time"]))
+for project_name, dur in sorted(entries.iteritems()):
+    print project_name, hhmmss(timedelta(milliseconds=dur))
