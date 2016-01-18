@@ -37,6 +37,39 @@ Reports time for a specific Workspace by project for the current week
 1. Workspace ID (`-w`/`--wid`) is required
 1. You can pass a "goal" option (`-g`/`--goal`) to work towards a specific goal
 
-Usage: `stats.py [-h] -w 123456 [-g 35]`
+### time_by_day_project_task.py
 
-Example: `python stats.py -w 1214302 -g 35`
+Reports time for a specific Workspace by day, by project, and by task (as a tree)
+
+1. Workspace ID (`-w`/`--wid`) is required
+1. Start date (`-s`/`--start-date`) is required
+1. End date (`-e`/`--end-date`) is required
+
+Usage: `time_by_day_project_task.py [-h] [-v] -w 123456 -s YYYY-MM-DD -e YYYY-MM-DD`
+
+Example: `python time_by_day_project_task.py -w 1214302 -s 2016-01-11 -e 2016-01-17`
+
+Output Example:
+
+```
+2016-01-15
+     my-first-project
+         Project management 02:12h [2.21h]
+         PROJECT TOTAL: 02:12h [2.21h]
+
+     my-second-project
+         #4641522 Redirect issues 02:40h [2.67h]
+         PROJECT TOTAL: 02:40h [2.67h]
+
+     DAY TOTAL: 04:52h [4.88h]
+
+2016-01-16
+     my-second-project
+         Development 00:29h [0.48h]
+         Unit testing 02:36h [2.60h]
+         PROJECT TOTAL: 03:05h [3.09h]
+
+     DAY TOTAL: 03:05h [3.09h]
+
+ALL TOTAL: 7:57h [7.97h]
+```
