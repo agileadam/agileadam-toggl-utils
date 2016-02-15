@@ -11,6 +11,8 @@ parser = argparse.ArgumentParser(description='Reports time for a specific Worksp
 parser.add_argument('-w', '--wid', help='ID of the Toggl workspace', required=True, metavar='123456', type=int)
 parser.add_argument('-s', '--start-date', help='Start date', required=True, metavar='YYYY-MM-DD')
 parser.add_argument('-e', '--end-date', help='End date', required=True, metavar='YYYY-MM-DD')
+parser.add_argument('-d', '--decimal-only', help='Show only decimal values', required=False, action='store_true')
+parser.add_argument('-t', '--totals-only', help='Show only total values (so exclude tasks)', required=False, action='store_true')
 args = parser.parse_args()
 
 config = ConfigParser.RawConfigParser()
@@ -159,13 +161,26 @@ for day_key, day_value in sorted(entries.iteritems()):
             this_day_dur += dur
             all_dur += dur
             t = timedelta(milliseconds=dur)
-            print "         " + task + " " + hhmm(t) + " [" + hours(dur) + "h]"
+            if not args.totals_only:
+                if args.decimal_only:
+                    print "         " + task + " " + hours(dur) + "h"
+                else:
+                    print "         " + task + " " + hhmm(t) + " [" + hours(dur) + "h]"
         project_t = timedelta(milliseconds = this_project_dur)
-        print "         PROJECT TOTAL: " + hhmm(project_t) + " [" + hours(this_project_dur) + "h]"
+        if args.decimal_only:
+            print "         PROJECT TOTAL: " + hours(this_project_dur) + "h"
+        else:
+            print "         PROJECT TOTAL: " + hhmm(project_t) + " [" + hours(this_project_dur) + "h]"
         print
     day_t = timedelta(milliseconds = this_day_dur)
-    print "     DAY TOTAL: " + hhmm(day_t) + " [" + hours(this_day_dur) + "h]"
+    if args.decimal_only:
+        print "     DAY TOTAL: " + hours(this_day_dur) + "h"
+    else:
+        print "     DAY TOTAL: " + hhmm(day_t) + " [" + hours(this_day_dur) + "h]"
     print
 
 all_t = timedelta(milliseconds = all_dur)
-print "ALL TOTAL: " + hhmm(all_t) + " [" + hours(all_dur) + "h]"
+if args.decimal_only:
+    print "ALL TOTAL: " + hours(all_dur) + "h"
+else:
+    print "ALL TOTAL: " + hhmm(all_t) + " [" + hours(all_dur) + "h]"
